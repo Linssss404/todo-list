@@ -6,7 +6,17 @@
  * - 所有渲染进程请求走 ipcMain.handle('api:call')
  */
 
-const { app, BrowserWindow, Tray, Menu, Notification, ipcMain, nativeImage, shell } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Tray,
+  Menu,
+  Notification,
+  ipcMain,
+  nativeImage,
+  shell,
+  globalShortcut,
+} = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -18,6 +28,7 @@ const ROOT = path.join(__dirname, '..');
 
 let win = null;
 let tray = null;
+let quickWin = null;
 let quitting = false;
 let db = null;
 let api = null;
@@ -129,6 +140,7 @@ function createTray() {
   tray.setToolTip('Linsssside · 个人生活助手');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: '打开 Linsssside', click: showWindow },
+    { label: '快速记录  Ctrl+Alt+Space', click: () => toggleQuick() },
     { type: 'separator' },
     { label: '退出', click: () => { quitting = true; app.quit(); } },
   ]));
@@ -136,7 +148,56 @@ function createTray() {
   tray.on('double-click', showWindow);
 }
 
-/** 每 20 秒看一次有没有到点的待办 */
+/** 快速记录小窗：一个快捷键，写一句话就能存成灵感 / 待办 / 支出 */
+function createQuickWindow() {
+  quickWin = new BrowserWindow({
+    width: 540,
+    height: 208,
+    frame: false,
+    resizable: false,
+    movable: true,
+    show: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    backgroundColor: '#1b1430',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  quickWin.loadFile(path.join(ROOT, 'dist', 'quick.html'));
+  quickWin.on('blur', () => quickWin && quickWin.hide());
+  quickWin.on('close', (event) => {
+    if (quitting) return;
+    event.preventDefault();
+    quickWin.hide();
+  });
+}
+
+function toggleQuick() {
+  if (!quickWin) {
+    createQuickWindow();
+    // 第一次还没渲染完，等加载好再显示，避免闪一下白屏
+    quickWin.webContents.once('did-finish-load', () => {
+      quickWin.center();
+      quickWin.show();
+      quickWin.focus();
+      quickWin.webContents.send('quick:reset');
+    });
+    return;
+  }
+  if (quickWin.isVisible()) {
+    quickWin.hide();
+    return;
+  }
+  quickWin.center();
+  quickWin.show();
+  quickWin.focus();
+  quickWin.webContents.send('quick:reset');
+}
+
+/** 每 20 秒看一次有没有到点的待办和日程 */
 function startReminderLoop() {
   const scan = () => {
     try {
@@ -164,6 +225,31 @@ function startReminderLoop() {
         n.on('click', () => {
           showWindow();
           if (win) win.webContents.send('app:focus', { kind: 'todo', id: row.id });
+        });
+        n.show();
+      }
+
+      // 日程：按 remind_before 提前提醒
+      const events = db.all(
+        `SELECT id, title, start_at, remind_before, all_day FROM events
+         WHERE reminded = 0 AND remind_before > 0 AND start_at IS NOT NULL`
+      );
+      for (const ev of events) {
+        const start = parseDue(ev.start_at);
+        if (!start) continue;
+        const fireAt = new Date(start.getTime() - Number(ev.remind_before) * 60 * 1000);
+        if (fireAt > now) continue;
+        db.run('UPDATE events SET reminded = 1 WHERE id = ?', [ev.id]);
+        if (now.getTime() - start.getTime() > 6 * 60 * 60 * 1000) continue;
+        if (!Notification.isSupported()) continue;
+        const minutes = Number(ev.remind_before);
+        const n = new Notification({
+          title: minutes >= 60 ? `${Math.round(minutes / 60)} 小时后有安排` : `${minutes} 分钟后有安排`,
+          body: ev.title,
+        });
+        n.on('click', () => {
+          showWindow();
+          if (win) win.webContents.send('app:focus', { kind: 'event', id: ev.id });
         });
         n.show();
       }
@@ -198,10 +284,28 @@ async function bootstrap() {
     return { ok: false, error: { message: '系统不支持通知' } };
   });
 
+  ipcMain.handle('quick:hide', () => {
+    if (quickWin) quickWin.hide();
+    return true;
+  });
+
+  ipcMain.handle('window:quick-open', () => {
+    toggleQuick();
+    return true;
+  });
+
   app.setAppUserModelId('com.linsssside.app');
   createWindow();
   createTray();
+  createQuickWindow();
   startReminderLoop();
+
+  // 全局快捷键：任意软件里都能叫出快速记录
+  try {
+    globalShortcut.register('Control+Alt+Space', toggleQuick);
+  } catch (err) {
+    console.warn('[shortcut] 注册失败', err && err.message);
+  }
 }
 
 const gotLock = app.requestSingleInstanceLock();
@@ -224,5 +328,7 @@ app.on('activate', showWindow);
 app.on('before-quit', () => {
   quitting = true;
   if (scanTimer) clearInterval(scanTimer);
+  try { globalShortcut.unregisterAll(); } catch (_) { /* ignore */ }
+  try { quickWin && quickWin.destroy(); } catch (_) { /* ignore */ }
   try { db && db.close(); } catch (err) { console.error(err); }
 });

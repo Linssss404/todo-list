@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS notes (
   title      TEXT NOT NULL DEFAULT '',
   content    TEXT NOT NULL DEFAULT '',
   tags       TEXT,
+  attachments TEXT,
   pinned     INTEGER NOT NULL DEFAULT 0,
   archived   INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
@@ -161,6 +162,43 @@ class Database {
     this._default('theme', '"light"');
     this._default('budget', '0');
     this._default('auth.enabled', 'false');
+
+    // 记账默认分类：8 个支出 + 4 个收入
+    const catCount = this.get('SELECT COUNT(*) AS n FROM categories');
+    if (!catCount || catCount.n === 0) {
+      const expense = [
+        ['餐饮', '🍜', '#F0748C'],
+        ['交通', '🚕', '#4C9AFF'],
+        ['购物', '🛍️', '#B96BE0'],
+        ['居住', '🏠', '#3FBF9F'],
+        ['娱乐', '🎬', '#F0A44B'],
+        ['医疗', '💊', '#E5484D'],
+        ['学习', '📚', '#7C5CFF'],
+        ['其他支出', '✨', '#8B8FA3'],
+      ];
+      const income = [
+        ['工资', '💼', '#3FBF9F'],
+        ['兼职', '🧩', '#4C9AFF'],
+        ['理财', '📈', '#7C5CFF'],
+        ['其他收入', '🎁', '#F0A44B'],
+      ];
+      expense.forEach(([name, icon, color], i) => {
+        this.insert('INSERT INTO categories (name, kind, icon, color, sort) VALUES (?,?,?,?,?)', [
+          name, 'expense', icon, color, i * 1024,
+        ]);
+      });
+      income.forEach(([name, icon, color], i) => {
+        this.insert('INSERT INTO categories (name, kind, icon, color, sort) VALUES (?,?,?,?,?)', [
+          name, 'income', icon, color, i * 1024,
+        ]);
+      });
+    }
+
+    // 老库补字段：笔记附件
+    const noteCols = this.all('PRAGMA table_info(notes)').map((c) => c.name);
+    if (!noteCols.includes('attachments')) {
+      this.db.run('ALTER TABLE notes ADD COLUMN attachments TEXT');
+    }
   }
 
   _default(key, value) {

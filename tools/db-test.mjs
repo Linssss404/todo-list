@@ -148,14 +148,112 @@ const run = async () => {
   api.invoke('auth.unlock', { password: 'abc123' });
   expect('对的密码能解开', api.invoke('auth.status').unlocked === true);
 
+  /* ---------- 记账 ---------- */
+  const cats = api.invoke('money.categories');
+  expect('默认分类已建好', cats.length === 12 && cats.some((c) => c.name === '餐饮'), `${cats.length} 个`);
+  const food = cats.find((c) => c.name === '餐饮');
+  const salary = cats.find((c) => c.name === '工资');
+
+  api.invoke('money.create', { kind: 'expense', amountCents: 1850, categoryId: food.id, occurredOn: '2026-10-30', note: '楼下面馆' });
+  api.invoke('money.create', { kind: 'expense', amountCents: 3000, categoryId: food.id, occurredOn: '2026-10-31', note: '和朋友吃饭' });
+  api.invoke('money.create', { kind: 'income', amountCents: 1200000, categoryId: salary.id, occurredOn: '2026-10-01', note: '十月工资' });
+
+  const oct = api.invoke('money.list', { month: '2026-10' });
+  expect('按月查账', oct.length === 3, `实际 ${oct.length}`);
+
+  const sum = api.invoke('money.summary', { month: '2026-10' });
+  expect('月度支出合计正确', sum.expenseCents === 4850, `${sum.expenseCents}`);
+  expect('月度收入合计正确', sum.incomeCents === 1200000);
+  expect('分类占比有餐饮', sum.byCategory[0].name === '餐饮' && sum.byCategory[0].totalCents === 4850);
+  expect('趋势返回 6 个月', sum.trend.length === 6);
+
+  api.invoke('money.setBudget', { yuan: 3000 });
+  expect('预算能存下', api.invoke('money.summary', { month: '2026-10' }).budgetCents === 300000);
+
+  const txnId = oct.find((t) => t.note === '楼下面馆').id;
+  api.invoke('money.update', { id: txnId, patch: { amountCents: 2000 } });
+  expect('改金额生效', api.invoke('money.list', { month: '2026-10' }).find((t) => t.id === txnId).amountCents === 2000);
+
+  const newCat = api.invoke('money.category.save', { name: '宠物', kind: 'expense', icon: '🐱', color: '#B96BE0' });
+  expect('能新增分类', !!newCat.id);
+  api.invoke('money.category.remove', { id: newCat.id });
+  expect('删分类后分类消失', api.invoke('money.categories').every((c) => c.name !== '宠物'));
+
+  /* ---------- 日程 ---------- */
+  const ev = api.invoke('events.create', {
+    title: '每周复盘',
+    startAt: '2026-10-05T20:00',
+    endAt: '2026-10-05T21:00',
+    repeatFreq: 'weekly',
+    remindBefore: 15,
+  });
+  expect('事件创建成功', !!ev.id);
+
+  const expanded = api.invoke('events.list', { from: '2026-10-01', to: '2026-10-31' });
+  const weeklyHits = expanded.filter((e) => e.title === '每周复盘');
+  expect('重复事件被展开成 4 次', weeklyHits.length === 4, `实际 ${weeklyHits.length}`);
+  expect('展开保留时长', weeklyHits[0].endAt.includes('T21:00'));
+
+  api.invoke('events.update', { id: ev.id, patch: { title: '每周复盘（改）' } });
+  expect('改事件标题生效', api.invoke('events.get', { id: ev.id }).title === '每周复盘（改）');
+
+  const agenda = api.invoke('agenda.get', { from: '2026-10-01', to: '2026-10-31' });
+  expect('日历合并了待办截止', agenda.todos.length > 0 || agenda.events.length > 0);
+  expect('日历带每天的名字', Array.isArray(agenda.days));
+
+  api.invoke('events.remove', { id: ev.id });
+  expect('删事件生效', api.invoke('events.get', { id: ev.id }) === null);
+
+  /* ---------- 灵感 ---------- */
+  const note = api.invoke('notes.save', {
+    title: '写周报的角度',
+    content: '从**数据**说起。\n\n- 结论先行\n- 再讲过程',
+    tags: '工作,写作',
+  });
+  expect('笔记保存成功', !!note.id);
+
+  const noteList = api.invoke('notes.list', {});
+  expect('笔记列表能查到', noteList.some((n) => n.id === note.id));
+  expect('标签能聚合', api.invoke('notes.tags').some((t) => t.name === '工作'));
+
+  api.invoke('notes.patch', { id: note.id, patch: { pinned: true } });
+  expect('置顶生效', api.invoke('notes.get', { id: note.id }).pinned === true);
+
+  const todoFromNote = api.invoke('notes.toTodo', { id: note.id });
+  expect('笔记能转成待办', todoFromNote.todoId > 0);
+
+  const att = api.invoke('files.saveAttachment', {
+    name: 'shot',
+    dataUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  });
+  expect('附件写入本地目录', fs.existsSync(path.join(tmpDir, att.path)));
+  const read = api.invoke('files.readAttachments', { paths: [att.path] });
+  expect('附件能读成 data URL', String(read[att.path] || '').startsWith('data:image/png'));
+
+  /* ---------- 快速记录 ---------- */
+  const q1 = api.invoke('quick.add', { type: 'note', text: '地铁上想到的点子' });
+  const q2 = api.invoke('quick.add', { type: 'todo', text: '买猫粮' });
+  const q3 = api.invoke('quick.add', { type: 'money', text: '18 早餐' });
+  expect('快记存成灵感', q1.kind === 'note');
+  expect('快记存成待办', q2.kind === 'todo');
+  expect('快记解析金额', q3.kind === 'money' && q3.amount === 18);
+  expect('快记的支出进了账本', api.invoke('money.list', { month: '2026-10' }).some((t) => t.note === '早餐'));
+
+  const globalSearch = api.invoke('search.query', { q: '数据' });
+  expect('全局搜索能搜到笔记', globalSearch.notes.length > 0);
+  const moneySearch = api.invoke('search.query', { q: '面馆' });
+  expect('全局搜索能搜到账目', moneySearch.txns.length > 0);
+
   /* ---------- 导出 ---------- */
   const exported = api.invoke('export.run');
   const files = fs.readdirSync(exported.dir);
   expect('导出目录有 3 个文件', files.length === 3, files.join(','));
   const json = JSON.parse(fs.readFileSync(path.join(exported.dir, '全部数据.json'), 'utf8'));
   expect('导出的 JSON 结构完整', Array.isArray(json.data.todos) && json.data.todos.length > 0);
+  expect('导出包含账单和笔记', json.data.txns.length > 0 && json.data.notes.length > 0);
   const csv = fs.readFileSync(path.join(exported.dir, '账单.csv'), 'utf8');
   expect('账单 CSV 带表头', csv.includes('日期') && csv.includes('金额'));
+  expect('账单 CSV 有真实数据', csv.includes('楼下面馆'));
 
   /* ---------- 落盘与重开 ---------- */
   db.flush();

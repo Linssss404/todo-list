@@ -3,8 +3,10 @@
  *   node tools/build.mjs
  *
  * 产出：
- *   dist/index.html
+ *   dist/index.html      主窗口
+ *   dist/quick.html      快速记录小窗
  *   dist/assets/app.js
+ *   dist/assets/quick.js
  *   dist/assets/app.css
  */
 
@@ -32,7 +34,14 @@ const resolveLocal = {
   resolveId(source, importer) {
     if (!importer || !source.startsWith('.')) return null;
     const base = path.resolve(path.dirname(importer), source);
-    const candidates = [base, `${base}.jsx`, `${base}.js`, `${base}.mjs`, path.join(base, 'index.jsx'), path.join(base, 'index.js')];
+    const candidates = [
+      base,
+      `${base}.jsx`,
+      `${base}.js`,
+      `${base}.mjs`,
+      path.join(base, 'index.jsx'),
+      path.join(base, 'index.js'),
+    ];
     for (const candidate of candidates) {
       try {
         if (fs.statSync(candidate).isFile()) return candidate;
@@ -44,40 +53,23 @@ const resolveLocal = {
   },
 };
 
-const bundle = await rollup({
-  input: path.join(root, 'src', 'main.jsx'),
-  plugins: [
-    resolveLocal,
-    replace({
-      'process.env.NODE_ENV': JSON.stringify('production'),
-      preventAssignment: true,
-    }),
-    nodeResolve({ extensions: ['.js', '.jsx'] }),
-    commonjs(),
-    babel({
-      babelHelpers: 'bundled',
-      extensions: ['.js', '.jsx'],
-      exclude: '**/node_modules/**',
-      presets: [['@babel/preset-react', { runtime: 'automatic', development: false }]],
-    }),
-  ],
-  onwarn(warning, warn) {
-    if (warning.code === 'CIRCULAR_DEPENDENCY') return;
-    warn(warning);
-  },
-});
+const plugins = [
+  resolveLocal,
+  replace({
+    'process.env.NODE_ENV': JSON.stringify('production'),
+    preventAssignment: true,
+  }),
+  nodeResolve({ extensions: ['.js', '.jsx'] }),
+  commonjs(),
+  babel({
+    babelHelpers: 'bundled',
+    extensions: ['.js', '.jsx'],
+    exclude: '**/node_modules/**',
+    presets: [['@babel/preset-react', { runtime: 'automatic', development: false }]],
+  }),
+];
 
-await bundle.write({
-  file: path.join(dist, 'assets', 'app.js'),
-  format: 'iife',
-  inlineDynamicImports: true,
-  sourcemap: false,
-});
-await bundle.close();
-
-fs.copyFileSync(path.join(root, 'src', 'styles.css'), path.join(dist, 'assets', 'app.css'));
-
-const html = `<!doctype html>
+const page = (title, body) => `<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -86,19 +78,53 @@ const html = `<!doctype html>
       content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Linsssside</title>
+    <title>${title}</title>
     <link rel="stylesheet" href="./assets/app.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script src="./assets/app.js"></script>
+    ${body}
   </body>
 </html>
 `;
-fs.writeFileSync(path.join(dist, 'index.html'), html, 'utf8');
+
+const targets = [
+  { input: 'src/main.jsx', output: 'app', html: page('Linsssside', '<div id="root"></div>'), htmlFile: 'index.html' },
+  { input: 'src/quick-main.jsx', output: 'quick', html: page('快速记录', '<div id="quick-root"></div>'), htmlFile: 'quick.html' },
+];
+
+for (const target of targets) {
+  const bundle = await rollup({
+    input: path.join(root, target.input),
+    plugins,
+    onwarn(warning, warn) {
+      if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+      warn(warning);
+    },
+  });
+  await bundle.write({
+    file: path.join(dist, 'assets', `${target.output}.js`),
+    format: 'iife',
+    inlineDynamicImports: true,
+    sourcemap: false,
+  });
+  await bundle.close();
+  fs.writeFileSync(path.join(dist, target.htmlFile), target.html, 'utf8');
+}
+
+fs.copyFileSync(path.join(root, 'src', 'styles.css'), path.join(dist, 'assets', 'app.css'));
+
+// 模块样式（记账 / 日程 / 灵感 / 快记）单独一个文件，构建时拼到主样式后面
+const modulesCss = path.join(root, 'src', 'styles-modules.css');
+if (fs.existsSync(modulesCss)) {
+  const merged =
+    fs.readFileSync(path.join(dist, 'assets', 'app.css'), 'utf8') +
+    '\n\n/* ===== 模块样式 ===== */\n' +
+    fs.readFileSync(modulesCss, 'utf8');
+  fs.writeFileSync(path.join(dist, 'assets', 'app.css'), merged, 'utf8');
+}
 
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 for (const f of fs.readdirSync(path.join(dist, 'assets'))) {
   console.log('  dist/assets/' + f, kb(fs.statSync(path.join(dist, 'assets', f)).size));
 }
-console.log('构建完成 →', path.relative(root, path.join(dist, 'index.html')));
+console.log('构建完成 → dist/index.html + dist/quick.html');

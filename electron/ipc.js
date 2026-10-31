@@ -8,6 +8,9 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { nowLocal, todayLocal, nextOccurrence } = require('./time');
+const { createMoney } = require('./modules/money');
+const { createCalendar } = require('./modules/calendar');
+const { createNotes } = require('./modules/notes');
 
 const TODO_FIELDS = {
   title: 'title',
@@ -537,6 +540,84 @@ function createApi({ db, app, shell, dataDir, getWindow }) {
     'app.openDataDir': appApi.openDataDir,
     'app.revealPath': appApi.revealPath,
     'app.quit': appApi.quit,
+  };
+
+  /* ---------------- 记账 / 日程 / 灵感三个模块 ---------------- */
+
+  const ctx = { db, app, shell, dataDir, readSetting, writeSetting, nowLocal, todayLocal };
+  Object.assign(api, createMoney(ctx), createCalendar(ctx), createNotes(ctx));
+
+  /** 首页要一次性拿到四块内容 */
+  api['overview.get'] = () => {
+    const base = overview.get();
+    const money = api['money.summary']({});
+    const trend = money.byCategory[0] || null;
+
+    // 接下来 7 天：日程 + 待办截止
+    const from = base.date;
+    const toDate = new Date();
+    toDate.setDate(toDate.getDate() + 7);
+    const to = `${toDate.getFullYear()}-${String(toDate.getMonth() + 1).padStart(2, '0')}-${String(
+      toDate.getDate()
+    ).padStart(2, '0')}`;
+    const agenda = api['agenda.get']({ from, to });
+    const upcoming = [
+      ...agenda.events.map((e) => ({
+        type: 'event',
+        id: e.id,
+        key: e.key,
+        title: e.title,
+        at: e.startAt,
+        allDay: e.allDay,
+        color: e.color,
+      })),
+      ...agenda.todos
+        .filter((t) => !t.doneAt)
+        .map((t) => ({
+          type: 'todo',
+          id: t.id,
+          key: `todo-${t.id}`,
+          title: t.title,
+          at: t.dueAt,
+          allDay: t.allDay,
+          color: t.listColor,
+        })),
+    ]
+      .sort((a, b) => String(a.at).localeCompare(String(b.at)))
+      .slice(0, 6);
+
+    const notes = api['notes.list']({ archived: false }).slice(0, 3);
+    const todayExpense = db.get(
+      `SELECT IFNULL(SUM(amount_cents), 0) AS total FROM txns
+       WHERE kind = 'expense' AND occurred_on = ?`,
+      [base.date]
+    ).total;
+
+    return { ...base, money, topCategory: trend, upcoming, notes, todayExpense };
+  };
+
+  /** 全局搜索：四个模块一起搜 */
+  api['search.query'] = ({ q }) => {
+    const keyword = String(q || '').trim();
+    if (!keyword) return { todos: [], days: [], notes: [], txns: [], events: [] };
+    const like = `%${keyword}%`;
+    return {
+      ...search.query({ q: keyword }),
+      notes: db
+        .all('SELECT id, title, content, updated_at FROM notes WHERE archived = 0 AND (title LIKE ? OR content LIKE ? OR IFNULL(tags,\'\') LIKE ?) ORDER BY updated_at DESC LIMIT 8', [like, like, like])
+        .map((n) => ({ id: n.id, title: n.title, excerpt: String(n.content || '').replace(/[#>*`_\n-]+/g, ' ').slice(0, 60) })),
+      txns: db
+        .all(
+          `SELECT t.id, t.amount_cents, t.kind, t.occurred_on, t.note, t.merchant, IFNULL(c.name,'未分类') AS category
+           FROM txns t LEFT JOIN categories c ON c.id = t.category_id
+           WHERE t.note LIKE ? OR t.merchant LIKE ? ORDER BY t.occurred_on DESC LIMIT 8`,
+          [like, like]
+        )
+        .map((t) => ({ ...t, amount: t.amount_cents / 100 })),
+      events: db
+        .all('SELECT id, title, start_at FROM events WHERE title LIKE ? ORDER BY start_at DESC LIMIT 8', [like])
+        .map((e) => ({ id: e.id, title: e.title, startAt: e.start_at })),
+    };
   };
 
   return {

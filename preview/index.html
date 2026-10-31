@@ -7,9 +7,9 @@
   body { margin: 0; min-height: 100vh; background: #f4f1fd; color: #1e1830;
     font-family: 'Segoe UI Variable Text','Segoe UI','Microsoft YaHei UI',system-ui,sans-serif;
     display: grid; place-items: center; padding: 48px 24px; }
-  .wrap { width: min(880px, 100%); }
+  .wrap { width: min(920px, 100%); }
   h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: .01em; }
-  p.lead { margin: 0 0 26px; color: #6f6689; font-size: 14px; }
+  p.lead { margin: 0 0 26px; color: #6f6689; font-size: 14px; line-height: 1.7; }
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
   a.card { display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; border-radius: 18px;
     background: #fff; border: 1px solid rgba(124,92,255,.14); text-decoration: none; color: inherit;
@@ -25,40 +25,60 @@
 <body>
   <div class="wrap">
     <h1>Linsssside · 界面预览</h1>
-    <p class="lead">这是把真实渲染结果导出成静态网页的样子，和桌面版用的是同一份 CSS。点进去看。</p>
+    <p class="lead">这是真实渲染结果的静态导出，和桌面版共用同一份 CSS，看到的就是应用里的样子。点进去看。</p>
     <div class="grid">
 <a class="card" href="1-仪表盘-浅色.html">
         <span class="no">01</span>
         <strong>仪表盘 · 浅色</strong>
-        <em>今日待办 / 每日命名 / 快速添加</em>
+        <em>今日待办 / 每日命名 / 本月支出 / 接下来 7 天</em>
       </a>
 <a class="card" href="2-待办-浅色.html">
         <span class="no">02</span>
         <strong>待办 · 浅色</strong>
-        <em>清单栏 + 筛选 + 拖拽排序</em>
+        <em>清单栏 + 筛选 + 优先级 + 拖拽</em>
       </a>
 <a class="card" href="3-待办抽屉-浅色.html">
         <span class="no">03</span>
         <strong>待办详情 · 浅色</strong>
-        <em>右侧抽屉就地编辑</em>
+        <em>右侧抽屉就地编辑，改动自动保存</em>
       </a>
-<a class="card" href="4-记账占位-浅色.html">
+<a class="card" href="4-记账-浅色.html">
         <span class="no">04</span>
-        <strong>记账 · 占位</strong>
-        <em>下一阶段的路线图</em>
+        <strong>记账 · 浅色</strong>
+        <em>月度汇总 / 流水 / 分类占比 / 六个月趋势</em>
       </a>
-<a class="card" href="5-仪表盘-深色.html">
+<a class="card" href="5-日程月视图-浅色.html">
         <span class="no">05</span>
+        <strong>日程 · 浅色</strong>
+        <em>月历 + 待办截止合并显示 + 每天的名字</em>
+      </a>
+<a class="card" href="6-灵感-浅色.html">
+        <span class="no">06</span>
+        <strong>灵感 · 浅色</strong>
+        <em>笔记列表 + Markdown 编辑与预览</em>
+      </a>
+<a class="card" href="7-仪表盘-深色.html">
+        <span class="no">07</span>
         <strong>仪表盘 · 深色</strong>
         <em>同一套界面，深色模式</em>
       </a>
-<a class="card" href="6-待办-深色.html">
-        <span class="no">06</span>
-        <strong>待办 · 深色</strong>
-        <em>深色下的清单与条目</em>
+<a class="card" href="8-记账-深色.html">
+        <span class="no">08</span>
+        <strong>记账 · 深色</strong>
+        <em>深色下的图表与流水</em>
+      </a>
+<a class="card" href="9-日程月视图-深色.html">
+        <span class="no">09</span>
+        <strong>日程 · 深色</strong>
+        <em>深色下的月历</em>
+      </a>
+<a class="card" href="10-快速记录窗.html">
+        <span class="no">10</span>
+        <strong>快速记录窗</strong>
+        <em>Ctrl+Alt+Space 唤起，一句话存成灵感 / 待办 / 支出</em>
       </a>
     </div>
-    <p class="foot">静态页没有交互（点按钮不会动），要看真实效果请双击项目根目录的 <code>启动 Linsssside.cmd</code>。</p>
+    <p class="foot">静态页没有交互（点按钮不会动）。要试真实交互，双击项目根目录的 <code>启动 Linsssside.cmd</code>。</p>
   </div>
 </body>
 </html>

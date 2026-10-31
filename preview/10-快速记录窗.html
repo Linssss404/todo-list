@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="utf-8" />
-<title>Linsssside · 仪表盘（深色）</title>
+<title>Linsssside · 快速记录窗（Ctrl+Alt+Space）</title>
 <style>
 /* ============================================================
    Linsssside · 主题与基础
@@ -1739,15 +1739,1365 @@ kbd {
 }
 
 
-html, body { height: auto; min-height: 100%; overflow: auto; }
-.app { height: auto; min-height: 100vh; }
-.content { overflow: visible; }
-.main-panel { min-height: 0; }
-.drawer { position: absolute; }
+/* ===== 模块样式 ===== */
+/* ============================================================
+   模块样式：记账 / 日程 / 灵感 / 快速记录
+   ============================================================ */
+
+.wide {
+  width: 100%;
+  justify-content: center;
+}
+.primary-btn.small {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.icon-btn.tiny {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+}
+.icon-btn.on {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.primary-btn.wide {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  padding: 10px;
+}
+
+.chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+  transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+.chip-btn:hover {
+  color: var(--text);
+}
+.chip-btn.active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.chip-btn .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.month-nav h2 {
+  font-size: 16.5px;
+  margin: 0;
+  min-width: 108px;
+}
+
+/* ---------------- 记账 ---------------- */
+.money-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.money-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 22px;
+  align-items: start;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-value {
+  font-size: 25px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.stat-value.income {
+  color: #3fbf9f;
+}
+.stat-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.budget-stat .budget-bar {
+  margin: 6px 0 2px;
+}
+
+.budget-bar {
+  height: 7px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.budget-fill {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: var(--grad);
+  transition: width 0.3s ease;
+}
+.budget-fill.over {
+  background: linear-gradient(90deg, #e5484d, #f0748c);
+}
+
+.money-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 336px;
+  gap: 16px;
+  align-items: start;
+}
+
+.money-list .panel-head {
+  align-items: center;
+}
+
+.txn-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+.txn-add select,
+.txn-add input[type='date'],
+.txn-add .note-input,
+.amount-input {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.txn-add .note-input {
+  flex: 1;
+  min-width: 120px;
+}
+.txn-add .note-input:focus,
+.txn-add select:focus {
+  border-color: var(--line-strong);
+}
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 132px;
+  color: var(--muted);
+}
+.amount-input input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.amount-input.big {
+  width: 100%;
+  padding: 10px 12px;
+}
+.amount-input.big input {
+  font-size: 26px;
+  font-weight: 650;
+}
+
+.cat-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.txn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.txn-day-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 0 4px 6px;
+  border-bottom: 1px dashed var(--line);
+  margin-bottom: 4px;
+}
+.txn-day-head em {
+  font-style: normal;
+}
+
+.txn-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 8px 6px;
+  border: none;
+  background: none;
+  border-radius: 11px;
+  text-align: left;
+  transition: background 0.15s;
+}
+.txn-row:hover {
+  background: var(--surface-2);
+}
+
+.txn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+.txn-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.txn-cat {
+  font-size: 13.5px;
+}
+.txn-note {
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.txn-amount {
+  font-size: 14.5px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+}
+.txn-amount.expense {
+  color: var(--text);
+}
+.txn-amount.income {
+  color: #3fbf9f;
+}
+
+.money-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.donut-wrap {
+  display: grid;
+  place-items: center;
+  padding: 10px 0 4px;
+}
+.donut-value {
+  font-size: 15px;
+  font-weight: 650;
+  fill: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.donut-cap {
+  font-size: 8.5px;
+  fill: var(--muted);
+}
+.legend {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.legend-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.legend em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.legend-amount {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.legend-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-left: 6px;
+}
+.swatch.expense {
+  background: var(--accent);
+}
+.swatch.income {
+  background: #3fbf9f;
+}
+
+.trend {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  height: 118px;
+  padding-top: 12px;
+}
+.trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+}
+.trend-bars {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+}
+.trend-bars .bar {
+  width: 9px;
+  border-radius: 5px 5px 2px 2px;
+  min-height: 3px;
+}
+.trend-bars .bar.expense {
+  background: var(--grad);
+}
+.trend-bars .bar.income {
+  background: color-mix(in srgb, #3fbf9f 70%, transparent);
+}
+.trend-label {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.budget-edit {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.budget-edit input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 13px;
+  outline: none;
+  color: var(--text);
+}
+
+.drawer.narrow {
+  width: 380px;
+}
+
+.cat-manager {
+  width: min(720px, 94vw);
+}
+.cat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 14px 0 6px;
+}
+.emoji-row,
+.color-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.emoji {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 15px;
+  display: grid;
+  place-items: center;
+}
+.emoji.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.swatch-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+.swatch-btn.active {
+  border-color: var(--text);
+  transform: scale(1.06);
+}
+.cat-groups h3 {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin: 16px 0 8px;
+}
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 13px;
+}
+.cat-item.editing {
+  border-color: var(--accent);
+}
+.cat-item > span:nth-child(2) {
+  flex: 1;
+}
+.cat-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+}
+.cat-item .mini-btn {
+  opacity: 0.55;
+}
+
+/* ---------------- 日程 ---------------- */
+.cal-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cal-head {
+  align-items: center;
+}
+.cal-panel {
+  padding: 18px 20px 22px;
+}
+
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 14px;
+}
+.month-weekday {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  padding-bottom: 6px;
+  letter-spacing: 0.1em;
+}
+.month-cell {
+  min-height: 104px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  padding: 6px 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  overflow: hidden;
+}
+.month-cell:hover {
+  border-color: var(--line-strong);
+}
+.month-cell.dim {
+  opacity: 0.45;
+}
+.month-cell.today {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.cell-head {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+}
+.cell-date {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.month-cell.today .cell-date {
+  color: var(--accent);
+}
+.cell-label {
+  font-size: 9.5px;
+  color: var(--accent-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.cell-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 10.5px;
+  line-height: 1.3;
+  padding: 2px 4px;
+  border-radius: 5px;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+.cell-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cell-item em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 9.5px;
+  flex: 0 0 auto;
+}
+.cell-item.todo {
+  border-left-color: var(--line-strong);
+  background: transparent;
+}
+.cell-item.todo.done span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.cell-check {
+  width: 11px;
+  height: 11px;
+  border-radius: 99px;
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  flex: 0 0 auto;
+}
+.cell-item.todo.done .cell-check {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+}
+.cell-more {
+  font-size: 10px;
+  color: var(--muted);
+  padding-left: 4px;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: 52px repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 12px;
+  overflow-x: auto;
+}
+.week-col {
+  min-width: 0;
+}
+.week-axis {
+  display: flex;
+  flex-direction: column;
+}
+.week-allday-label,
+.week-day-head {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--muted);
+  gap: 5px;
+}
+.week-day-head strong {
+  font-size: 15px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.week-col.today .week-day-head strong {
+  color: var(--accent);
+}
+.week-hour-label {
+  height: 56px;
+  font-size: 10.5px;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 6px;
+  border-top: 1px solid transparent;
+}
+.week-allday {
+  height: 46px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.allday-chip {
+  border: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 10.5px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.allday-chip.done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.week-hours {
+  position: relative;
+  border-left: 1px solid var(--line);
+  cursor: crosshair;
+}
+.week-col.today .week-hours {
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+.week-hour {
+  height: 56px;
+  border-top: 1px solid var(--line);
+}
+.week-event {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-radius: 7px;
+  padding: 4px 6px;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.week-event strong {
+  font-size: 11px;
+  font-weight: 600;
+}
+.week-event em {
+  font-style: normal;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.agenda-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.agenda-day {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--line);
+}
+.agenda-day-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.agenda-day-head strong {
+  font-size: 22px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.agenda-day-head span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.agenda-day-head em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--accent-2);
+}
+.agenda-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.agenda-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  border-left: 2px solid var(--accent);
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.agenda-time {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 54px;
+  flex: 0 0 auto;
+}
+.agenda-item.todo {
+  border-left-color: var(--line-strong);
+  background: transparent;
+  border: 1px dashed var(--line);
+}
+.agenda-item.todo.done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.day-chip {
+  margin-left: 8px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--accent-3) 16%, transparent);
+  color: var(--accent-2);
+}
+.day-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: none;
+  border-left: 3px solid var(--accent);
+  background: var(--surface-2);
+  text-align: left;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.day-item.todo {
+  border-left-color: transparent;
+  border: 1px solid var(--line);
+  background: none;
+}
+.day-item.todo.done .day-item-title {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.day-item-time {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 38px;
+}
+.day-item-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dash {
+  color: var(--muted);
+  align-self: center;
+}
+
+/* ---------------- 灵感 ---------------- */
+.notes-page {
+  display: grid;
+  grid-template-columns: 306px minmax(0, 1fr);
+  gap: 16px;
+  height: calc(100vh - 158px);
+}
+.notes-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  padding: 16px;
+}
+.notes-rail-head {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.notes-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.notes-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.tag-filter {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  max-height: 76px;
+  overflow-y: auto;
+}
+.note-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 2px;
+}
+.note-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.note-card:hover {
+  background: var(--surface-2);
+}
+.note-card.active {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+}
+.note-card-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.note-card-top strong {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pin-mark {
+  color: var(--accent-3);
+  flex: 0 0 auto;
+}
+.note-card p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.note-card-foot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-size: 10px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+.note-card-foot em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.note-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  padding: 16px 20px 18px;
+}
+.note-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.note-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.note-title {
+  border: none;
+  background: none;
+  font-size: 22px;
+  font-weight: 650;
+  outline: none;
+  color: var(--text);
+  padding: 0;
+}
+.note-title::placeholder {
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
+}
+.note-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+.note-tags {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 12.5px;
+  color: var(--text);
+}
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.md-tools {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.md-tools button,
+.md-img-btn {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.md-tools button:hover,
+.md-img-btn:hover {
+  color: var(--accent);
+  border-color: var(--line-strong);
+}
+.md-area {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+  font-family: inherit;
+}
+.md-preview {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.md-preview h2,
+.md-preview h3,
+.md-preview h4 {
+  margin: 16px 0 6px;
+  line-height: 1.35;
+}
+.md-preview h2 {
+  font-size: 19px;
+}
+.md-preview h3 {
+  font-size: 16.5px;
+}
+.md-preview h4 {
+  font-size: 15px;
+}
+.md-preview p {
+  margin: 8px 0;
+}
+.md-preview ul,
+.md-preview ol {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+.md-preview blockquote {
+  margin: 10px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line-strong);
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 0 8px 8px 0;
+}
+.md-preview code {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 12.5px;
+}
+.md-preview pre {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  overflow-x: auto;
+}
+.md-preview pre code {
+  border: none;
+  background: none;
+  padding: 0;
+}
+.md-preview hr {
+  border: none;
+  border-top: 1px dashed var(--line);
+  margin: 16px 0;
+}
+.md-preview a {
+  color: var(--accent);
+}
+.md-img {
+  max-width: 100%;
+  border-radius: 10px;
+  margin: 8px 0;
+  border: 1px solid var(--line);
+}
+.md-task {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.md-task.done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.md-box {
+  width: 15px;
+  height: 15px;
+  border-radius: 5px;
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.attach-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+.attach-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 2px 8px;
+}
+
+/* ---------------- 首页四宫格补充 ---------------- */
+.money-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+.money-big {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.money-big strong {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.money-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.money-cat {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.money-cat em {
+  margin-left: auto;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.upcoming-list,
+.notes-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 8px;
+}
+.upcoming-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border: none;
+  background: none;
+  border-radius: 9px;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.upcoming-row:hover {
+  background: var(--surface-2);
+}
+.upcoming-bar {
+  width: 3px;
+  height: 15px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.upcoming-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notes-mini-row {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 7px 8px;
+  border: none;
+  background: none;
+  border-radius: 9px;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+.notes-mini-row:hover {
+  background: var(--surface-2);
+}
+.notes-mini-title {
+  font-size: 13px;
+  font-weight: 600;
+  flex: 0 0 auto;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.notes-mini-excerpt {
+  font-size: 11.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------------- 快速记录窗 ---------------- */
+.quick {
+  --q-bg: #1b1430;
+  height: 100vh;
+  background: linear-gradient(150deg, #221a3b 0%, #1a1430 55%, #241634 100%);
+  color: #f2eefc;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-app-region: drag;
+}
+.quick > * {
+  -webkit-app-region: no-drag;
+}
+.quick-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.quick-tabs {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.quick-tab {
+  border: none;
+  background: none;
+  color: rgba(242, 238, 252, 0.6);
+  font-size: 12px;
+  padding: 4px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.quick-tab.active {
+  background: linear-gradient(135deg, #6d4dff, #e271bc);
+  color: #fff;
+  font-weight: 600;
+}
+.quick-brand {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: rgba(242, 238, 252, 0.35);
+}
+.quick-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  color: #fff;
+  font-size: 18px;
+  padding: 2px 0;
+}
+.quick-input::placeholder {
+  color: rgba(242, 238, 252, 0.35);
+}
+.quick-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.quick-hint {
+  font-size: 11.5px;
+  color: rgba(242, 238, 252, 0.5);
+}
+.quick-hint.error {
+  color: #ff9a9d;
+}
+.quick-keys {
+  font-size: 10.5px;
+  color: rgba(242, 238, 252, 0.35);
+}
+.quick-keys kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+@media (max-width: 1180px) {
+  .money-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .notes-page {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+  .money-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+html,body{height:100%;margin:0;overflow:hidden}
 
 </style>
 </head>
 <body>
-<div class="app"><header class="topbar"><div class="brand"><span class="brand-mark">L</span><span class="brand-text"><strong>Linsssside</strong><em>个人生活助手</em></span></div><nav class="tabs"><button class="tab active"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"></path></svg><span>仪表盘</span></button><button class="tab"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l4.5 4.5L19.5 6.5"></path></svg><span>待办</span></button><button class="tab"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13" rx="2.5"></rect><path d="M3 10h18M16.5 14.5h1.5"></path></svg><span>记账</span></button><button class="tab"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg><span>日程</span></button><button class="tab"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.9L19 9.7l-4.4 2.9L15.8 18 12 15.2 8.2 18l1.2-5.4L5 9.7l5.2-1.8L12 3z"></path></svg><span>灵感</span></button></nav><div class="top-actions"><button class="search-btn" title="全局搜索"><svg class="" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="M16 16l4 4"></path></svg><span>搜索</span><kbd>Ctrl K</kbd></button><button class="icon-btn" title="切到浅色"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2.5v2M12 19.5v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2.5 12h2M19.5 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg></button><button class="icon-btn" title="设置"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 1.56V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.56-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6 1.7 1.7 0 0010 3.04V3a2 2 0 114 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9v.09a1.7 1.7 0 001.56 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"></path></svg></button></div></header><main class="content"><div class="page dashboard"><section class="hero"><div class="hero-glow"></div><div class="hero-head"><span class="hero-date">10月31日 · 周六</span><span class="hero-greet">下午好</span></div><button class="day-title lg"><span>自信绽放日</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 00-3-3L5 17v3z"></path></svg></button><p class="hero-sub">今天还有 <b>4</b> 件事 · 已完成 2</p><div class="hero-add"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><input placeholder="脑子里冒出来的事，回车就记下" value=""><kbd>Enter</kbd></div></section><div class="grid"><section class="card panel today-panel"><header class="panel-head"><div><h2>今日待办</h2><p class="muted">4 件待办 · 点击可编辑</p></div><button class="link-btn">全部 <svg class="" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button></header><div class="today-list"><div class="todo-row compact" draggable="false"><button class="check" aria-label="完成"><svg class="" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l4.5 4.5L19.5 6.5"></path></svg></button><div class="todo-main"><div class="todo-title"><span class="flag p-high">高</span><span class="title-text">把周报写完，附上三张数据图</span></div><div class="todo-meta"><span class="chip due today">今天 18:00</span><span class="chip repeat"><svg class="" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11V9a3 3 0 013-3h10l-3-3M21 13v2a3 3 0 01-3 3H8l3 3"></path></svg>每周</span><span class="chip sub">1/3</span><span class="chip quiet">工作</span></div></div></div><div class="todo-row compact" draggable="false"><button class="check" aria-label="完成"><svg class="" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l4.5 4.5L19.5 6.5"></path></svg></button><div class="todo-main"><div class="todo-title"><span class="flag p-mid">中</span><span class="title-text">给妈妈打个视频电话</span></div><div class="todo-meta"><span class="chip due today">今天</span><span class="chip quiet">收件箱</span></div></div></div><div class="todo-row compact" draggable="false"><button class="check" aria-label="完成"><svg class="" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l4.5 4.5L19.5 6.5"></path></svg></button><div class="todo-main"><div class="todo-title"><span class="title-text">整理这周的灵感碎片</span></div><div class="todo-meta"><span class="chip due today">今天</span><span class="chip quiet">工作</span></div></div></div><div class="todo-row compact" draggable="false"><button class="check" aria-label="完成"><svg class="" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l4.5 4.5L19.5 6.5"></path></svg></button><div class="todo-main"><div class="todo-title"><span class="flag p-mid">中</span><span class="title-text">回复设计稿的两条批注</span></div><div class="todo-meta"><span class="chip due today">今天</span><span class="chip quiet">工作</span></div></div></div></div></section><section class="card panel ghost-card"><div class="ghost-top"><span class="ghost-icon"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6.5" width="18" height="13" rx="2.5"></rect><path d="M3 10h18M16.5 14.5h1.5"></path></svg></span><span class="badge">下一阶段</span></div><h2>本月支出</h2><p class="muted">记账模块 · 下一阶段接入</p><p class="ghost-detail">收支、分类、预算进度会在这里汇总成一张小卡。</p></section><section class="card panel ghost-card"><div class="ghost-top"><span class="ghost-icon"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg></span><span class="badge">下一阶段</span></div><h2>近期日程</h2><p class="muted">日程模块 · 下一阶段接入</p><p class="ghost-detail">日程和待办会共用同一份时间，加截止时间就自动出现在日历上。</p></section><section class="card panel ghost-card"><div class="ghost-top"><span class="ghost-icon"><svg class="" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.9L19 9.7l-4.4 2.9L15.8 18 12 15.2 8.2 18l1.2-5.4L5 9.7l5.2-1.8L12 3z"></path></svg></span><span class="badge">下一阶段</span></div><h2>灵感碎片</h2><p class="muted">灵感模块 · 下一阶段接入</p><p class="ghost-detail">随手记下的想法会在这里冒出来，随时能转成待办。</p></section></div></div></main></div>
+<div class="quick"><div class="quick-top"><div class="quick-tabs"><button class="quick-tab active">灵感</button><button class="quick-tab">待办</button><button class="quick-tab">支出</button></div><span class="quick-brand">Linsssside</span></div><input class="quick-input" placeholder="写一句话…" value=""><div class="quick-foot"><span class="quick-hint">想到什么就写什么，回车存进灵感库</span><span class="quick-keys"><kbd>Enter</kbd> 存 · <kbd>Tab</kbd> 换类型 · <kbd>Esc</kbd> 关</span></div></div>
 </body>
 </html>

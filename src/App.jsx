@@ -5,7 +5,9 @@ import SearchPalette from './components/SearchPalette.jsx';
 import SettingsModal from './components/SettingsModal.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Todos from './pages/Todos.jsx';
-import ComingSoon from './pages/ComingSoon.jsx';
+import Money from './pages/Money.jsx';
+import Calendar from './pages/Calendar.jsx';
+import Notes from './pages/Notes.jsx';
 import { api } from './api.js';
 import { dateCN, todayStr } from './lib/dates.js';
 
@@ -77,6 +79,7 @@ export default function App() {
         setView('todos');
         setFocusTodoId(id);
       }
+      if (kind === 'event') setView('calendar');
     });
   }, []);
 
@@ -137,9 +140,9 @@ export default function App() {
           />
         )}
 
-        {view === 'money' && <ComingSoon module="money" />}
-        {view === 'calendar' && <ComingSoon module="calendar" />}
-        {view === 'notes' && <ComingSoon module="notes" />}
+        {view === 'money' && <Money onToast={showToast} />}
+        {view === 'calendar' && <Calendar onToast={showToast} onOpenTodo={openTodo} />}
+        {view === 'notes' && <Notes onToast={showToast} />}
       </main>
 
       {searchOpen && (
@@ -153,6 +156,7 @@ export default function App() {
             setView('home');
             showToast(date === today ? '今天就在首页' : `${dateCN(date)} 这一天`);
           }}
+          onPickView={setView}
         />
       )}
 

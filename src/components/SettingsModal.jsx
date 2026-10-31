@@ -170,7 +170,10 @@ export default function SettingsModal({ onClose, theme, onTheme, onToast }) {
 
         <section className="settings-block">
           <h3>提醒</h3>
-          <p className="muted">窗口关掉后会收进托盘，到点照样弹系统通知。</p>
+          <p className="muted">窗口关掉后会收进托盘，到点照样弹系统通知。全天待办不弹通知，避免半夜打扰。</p>
+          <p className="muted">
+            随手记：任意软件里按 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd>，写一句话回车就能存成灵感、待办或支出。
+          </p>
           <button
             className="ghost-btn"
             onClick={async () => {

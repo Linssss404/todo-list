@@ -43,4 +43,38 @@ export const api = {
   appInfo: () => call('app.info'),
   openDataDir: () => call('app.openDataDir'),
   reveal: (target) => call('app.revealPath', { target }),
+
+  /* ---------------- 记账 ---------------- */
+  moneyCategories: () => call('money.categories'),
+  saveCategory: (payload) => call('money.category.save', payload),
+  removeCategory: (id) => call('money.category.remove', { id }),
+  txns: (options) => call('money.list', options),
+  recentTxns: (limit) => call('money.recent', { limit }),
+  createTxn: (payload) => call('money.create', payload),
+  updateTxn: (id, patch) => call('money.update', { id, patch }),
+  removeTxn: (id) => call('money.remove', { id }),
+  moneySummary: (month) => call('money.summary', { month }),
+  setBudget: (yuan) => call('money.setBudget', { yuan }),
+
+  /* ---------------- 日程 ---------------- */
+  events: (from, to) => call('events.list', { from, to }),
+  eventGet: (id) => call('events.get', { id }),
+  createEvent: (payload) => call('events.create', payload),
+  updateEvent: (id, patch) => call('events.update', { id, patch }),
+  removeEvent: (id) => call('events.remove', { id }),
+  agenda: (from, to) => call('agenda.get', { from, to }),
+
+  /* ---------------- 灵感 ---------------- */
+  notes: (options) => call('notes.list', options),
+  noteTags: () => call('notes.tags'),
+  noteGet: (id) => call('notes.get', { id }),
+  saveNote: (payload) => call('notes.save', payload),
+  patchNote: (id, patch) => call('notes.patch', { id, patch }),
+  removeNote: (id) => call('notes.remove', { id }),
+  noteToTodo: (id) => call('notes.toTodo', { id }),
+  saveAttachment: (dataUrl, name) => call('files.saveAttachment', { dataUrl, name }),
+  readAttachments: (paths) => call('files.readAttachments', { paths }),
+
+  /* ---------------- 快速记录 ---------------- */
+  quickAdd: (type, text) => call('quick.add', { type, text }),
 };
