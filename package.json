@@ -8,6 +8,7 @@
   "main": "electron/main.js",
   "scripts": {
     "build": "node tools/build.mjs",
+    "preview": "node tools/preview.mjs",
     "start": "node tools/build.mjs && electron .",
     "test:db": "node tools/db-test.mjs",
     "test:ui": "node tools/smoke.mjs",
