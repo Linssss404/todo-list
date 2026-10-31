@@ -1,0 +1,76 @@
+{
+  "name": "linsssside",
+  "version": "0.1.0",
+  "description": "Linsssside — 本地个人生活助手（待办 / 记账 / 日程 / 灵感）",
+  "private": true,
+  "license": "MIT",
+  "author": "Linsssside",
+  "main": "electron/main.js",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "start": "node tools/build.mjs && electron .",
+    "test:db": "node tools/db-test.mjs",
+    "test:ui": "node tools/smoke.mjs",
+    "test": "node tools/build.mjs && node tools/db-test.mjs && node tools/smoke.mjs",
+    "pack": "node tools/build.mjs && electron-builder --dir",
+    "dist": "node tools/build.mjs && electron-builder --win nsis portable"
+  },
+  "build": {
+    "appId": "com.linsssside.app",
+    "productName": "Linsssside",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*",
+      "build/*.png",
+      "package.json",
+      "!data/**",
+      "!**/*.map",
+      "!tools/**",
+      "!src/**"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sql.js/dist/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Linsssside-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "artifactName": "Linsssside-Setup-${version}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Linsssside"
+    },
+    "portable": {
+      "artifactName": "Linsssside-Portable-${version}.${ext}"
+    }
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "sql.js": "^1.15.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.10",
+    "@babel/preset-react": "^8.0.1",
+    "@rollup/plugin-babel": "^7.1.0",
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "@rollup/plugin-replace": "^6.0.3",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
+    "jsdom": "^30.1.3",
+    "rollup": "^4.66.0"
+  }
+}

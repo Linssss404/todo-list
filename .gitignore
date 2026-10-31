@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+data/
+.eb-cache/
+.pnpm-store/
+.tmp/
+.tmp-data/
+.DS_Store
+*.log
